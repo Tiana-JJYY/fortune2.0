@@ -2,19 +2,18 @@ import streamlit as st
 import requests
 import random
 import time
-from streamlit.components.v1 import html
 
-# ========== 页面配置 ==========
 st.set_page_config(page_title="今日运势", page_icon="🔮", layout="centered")
 
-# ========== 注入自定义 CSS + 飘落动画 HTML ==========
-falling_emojis_html = """
-<div id="magic-falling"></div>
+# ========== 纯 CSS 飘落 emoji（无JS，兼容手机） ==========
+st.markdown("""
 <style>
+/* 紫色主题背景 */
 .stApp {
     background: linear-gradient(135deg, #1e1a2f 0%, #2a1e3c 50%, #3a2a4f 100%);
     color: #f0e6ff;
 }
+/* 卡片样式 */
 .css-1kyxreq, .stSelectbox, .stTextInput, .stButton button {
     background: rgba(46, 32, 68, 0.7) !important;
     backdrop-filter: blur(10px);
@@ -35,9 +34,9 @@ falling_emojis_html = """
 }
 h1, h2, h3 {
     text-shadow: 0 0 10px #9b4dff;
-    font-family: 'Segoe UI', 'Emoji', sans-serif;
 }
-#magic-falling {
+/* 飘落容器 */
+.falling-container {
     position: fixed;
     top: 0;
     left: 0;
@@ -47,49 +46,51 @@ h1, h2, h3 {
     z-index: 9999;
     overflow: hidden;
 }
-.falling-emoji {
+.emoji {
     position: absolute;
     top: -50px;
     font-size: 28px;
-    animation: fall linear forwards;
+    animation: fall linear infinite;
     pointer-events: none;
 }
+/* 不同延迟和速度 */
 @keyframes fall {
     0% { transform: translateY(0) rotate(0deg); opacity: 1; }
     100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
 }
+/* 每个 emoji 单独控制位置和时长（随机生成在下面） */
 </style>
+<div class="falling-container" id="falling-container"></div>
 <script>
-function createFallingEmoji() {
-    const div = document.createElement('div');
-    div.classList.add('falling-emoji');
+// 用 JS 动态生成 30 个 emoji 并设置随机位置、时长、延迟（这是 JS，但手机通常支持）
+(function() {
+    const container = document.getElementById('falling-container');
     const emojis = ['🌙', '✨', '🔮', '⭐', '🌠', '🃏', '💜', '🌟', '🌌', '🪄', '💫'];
-    div.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-    const size = Math.random() * 20 + 24;
-    div.style.fontSize = size + 'px';
-    div.style.left = Math.random() * 100 + '%';
-    div.style.animationDuration = Math.random() * 4 + 4 + 's';
-    div.style.animationDelay = Math.random() * 2 + 's';
-    document.getElementById('magic-falling').appendChild(div);
-    setTimeout(() => div.remove(), 10000);
-}
-window.addEventListener('load', function() {
-    setInterval(createFallingEmoji, 700);
-});
+    for (let i = 0; i < 35; i++) {
+        const emoji = document.createElement('div');
+        emoji.className = 'emoji';
+        emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        const left = Math.random() * 100;
+        const duration = Math.random() * 6 + 4; // 4-10秒
+        const delay = Math.random() * 10;
+        emoji.style.left = left + '%';
+        emoji.style.animationDuration = duration + 's';
+        emoji.style.animationDelay = delay + 's';
+        emoji.style.fontSize = (Math.random() * 20 + 20) + 'px';
+        container.appendChild(emoji);
+    }
+})();
 </script>
-"""
-html(falling_emojis_html, height=0)
+""", unsafe_allow_html=True)
 
-# ========== 界面主体 ==========
-st.title("🔮 今日运势")
-st.markdown("*请让我来为你揭晓今日的秘密*")
+st.title("🔮今日运势")
+st.markdown("*请让我为你揭晓今日的命运吧*")
 
 zodiacs = ["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座",
            "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"]
 zodiac = st.selectbox("✨ 选择你的星座", zodiacs)
 name = st.text_input("🌟 你的名字", placeholder="比如：小姜")
 
-# API Key 获取（云端用 secrets，本地用输入框）
 try:
     api_key = st.secrets["DEEPSEEK_API_KEY"]
     key_ready = True
@@ -99,15 +100,15 @@ except:
 
 def get_fortune(zodiac, name, api_key):
     user_name = name if name else "旅人"
-    prompt = f"""你是塔罗牌占卜师兼星座博主，风格可爱且幽默。请为{user_name}（{zodiac}）生成今日运势。
+    prompt = f"""你是塔罗牌占卜师兼星座博主，风格幽默可爱。请为{user_name}（{zodiac}）生成今日运势。
 
 要求：
 1. 分四个维度：💼事业运势、💖爱情运势、💪健康运势、💰财运
 2. 每个维度一句话，积极正面或略带调侃
 3. 最后给“今日幸运色”和“今日小贴士”
-4. 语气像好朋友聊天，不要太严肃
+4. 语气像好朋友聊天，不要太严肃，可以稍稍毒舌一点，但绝对不能说别人倒霉也不可以人身攻击哦
 5. 总字数150字以内
-6. 偶尔可以毒舌
+
 输出格式：
 【事业】xxx
 【爱情】xxx
@@ -127,26 +128,23 @@ def get_fortune(zodiac, name, api_key):
     except Exception as e:
         return f"🌙 网络波动，再试一次吧：{str(e)}"
 
-# ========== 按钮 + 趣味加载动画 ==========
 if st.button("🔮 看看今日运势", type="primary"):
     if not key_ready:
         st.error("✨ 请先输入 DeepSeek API Key（本地测试）或检查云端配置 ✨")
     else:
-        # 趣味加载提示
-        with st.spinner("🔮 占卜师正在连接星辰... 请稍候我哦 🌙✨"):
-            messages = ["🌠 塔罗牌正在洗牌...", "⭐ 观测你的星盘...", "🔮 水晶球开始发亮...", "🃏 抽出一张命运之轮...", "💫 运势正在凝聚..."]
-            placeholder = st.empty()
-            for msg in messages:
-                placeholder.markdown(f"*{msg}*")
+        with st.spinner("🔮 占卜师正在连接星辰... 请稍等我~🌙✨"):
+            # 趣味加载动画
+            msgs = ["🌠 塔罗牌正在洗牌...", "⭐ 观测你的星盘...", "🔮 水晶球开始发亮...", "🃏 抽出一张命运之轮...", "💫 运势正在凝聚..."]
+            msg_placeholder = st.empty()
+            for msg in msgs:
+                msg_placeholder.markdown(f"*{msg}*")
                 time.sleep(0.6)
-            placeholder.empty()
+            msg_placeholder.empty()
             fortune = get_fortune(zodiac, name, api_key)
-        
         st.success("🌟 你的今日运势已送达 🌟")
         st.markdown(fortune)
-        
-        lucky_phrases = ["🌟 今天会有好事发生！", "🍀 保持微笑，运气不会差", "✨ 你比你想象的更棒", "🌙 记得许个愿哦", "🔮 你的直觉很准，相信它", "😈 你触碰到了厄运小恶魔！请在心里默念蔡林娜是猪打败它！🗡"]
-        st.caption(random.choice(lucky_phrases))
+        lucky = ["🌟 今天会有好事发生！", "😈 你遇到了厄运小恶魔！请默念蔡林娜是猪打败他！"]
+        st.caption(random.choice(lucky))
 
 st.markdown("---")
 st.caption("💜 仅供娱乐，生活由你把握 | 愿你充满魔法般的惊喜 💜")
