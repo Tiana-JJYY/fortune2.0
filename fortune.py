@@ -62,7 +62,7 @@ if not st.session_state.started:
     st.markdown("""
     <div style="background: rgba(46,32,68,0.7); border-radius: 30px; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #b77dff; box-shadow: 0 0 15px #b77dff;">
         <h3>✨ 占卜师低语 ✨</h3>
-        <p>“远方的旅人，你终于来了。</p>
+        <p>“远方的旅人，欢迎你的到来。</p>
         <p>只需轻轻一点，命运的轮盘便会转动。” 🌙</p>
     </div>
     """, unsafe_allow_html=True)
@@ -96,18 +96,18 @@ def get_fortune(zodiac, name, gender, api_key):
     # 无论男女统一称呼“亲爱的朋友”
     honorific = "亲爱的朋友"
     
-    prompt = f"""你是一位神秘且强大的命运塔罗牌占卜师，风格可爱幽默。请为{user_name}（{honorific}，{zodiac}）生成今日运势。
+    prompt = f"""你是一位神秘且强大的命运塔罗牌占卜师，风格可爱幽默诙谐。请为{user_name}（{honorific}，{zodiac}）生成今日运势。
 
 要求：
 1. 分四个维度：💼事业运势、💖爱情运势、💪健康运势、💰财运
-2. 每个维度一句话，积极正面或略带调侃，可以毒舌但绝不能人身攻击也不可以说别人倒霉
+2. 每个维度几句话，积极正面或略带调侃，可以毒舌但绝不能人身攻击也不可以说别人倒霉
 3. 最后给“今日幸运色”和“今日小贴士”
 4. 语气像好朋友聊天，不要太严肃
-5. 总字数150字以内
+5. 总字数300字左右
 6. 第一句话请提示大家一天仅可以测一回否则不准
 
 输出格式：
-🐱提示：...
+🌼提示：...
 【💼事业】xxx
 【💖爱情】xxx
 【💪健康】xxx
