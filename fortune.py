@@ -6,43 +6,18 @@ from datetime import date
 
 st.set_page_config(page_title="今日运势", page_icon="🔮", layout="centered")
 
-# ========== 自定义CSS：紫色主题 + 发光边框 + 星光闪烁 ==========
+# ========== 安全版 CSS：去掉 ::before 闪烁，保留发光边框和高对比文字 ==========
 st.markdown("""
 <style>
-/* 背景渐变 + 星光闪烁层 */
+/* 深紫色背景（无复杂动画） */
 .stApp {
     background: linear-gradient(135deg, #1e1a2f 0%, #2a1e3c 50%, #3a2a4f 100%);
-    position: relative;
-    overflow: hidden;
-}
-/* 星光闪烁动画 */
-.stApp::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background-image: radial-gradient(2px 2px at 20px 30px, #fff, rgba(0,0,0,0)),
-                      radial-gradient(2px 2px at 40px 70px, #f8f9fa, rgba(0,0,0,0)),
-                      radial-gradient(3px 3px at 80px 120px, #ffd966, rgba(0,0,0,0)),
-                      radial-gradient(1px 1px at 150px 200px, #fff, rgba(0,0,0,0)),
-                      radial-gradient(2px 2px at 250px 350px, #ffb347, rgba(0,0,0,0));
-    background-repeat: no-repeat;
-    background-size: 200px 200px, 300px 300px, 400px 400px, 500px 500px, 600px 600px;
-    opacity: 0.6;
-    animation: twinkle 3s infinite alternate;
-}
-@keyframes twinkle {
-    0% { opacity: 0.3; background-size: 200px 200px, 300px 300px, 400px 400px, 500px 500px, 600px 600px; }
-    100% { opacity: 0.9; background-size: 220px 220px, 330px 330px, 440px 440px, 550px 550px, 660px 660px; }
 }
 /* 全局文字颜色 */
-body, .stMarkdown, .stTextInput label, .stSelectbox label, .stRadio label, .stDateInput label {
+body, .stMarkdown, label, .stTextInput label, .stSelectbox label, .stRadio label, .stDateInput label {
     color: #f0e6ff !important;
 }
-/* 卡片、输入框、按钮等发光边框（不包括h1） */
+/* 卡片、输入框、按钮等发光边框 */
 .css-1kyxreq, .stSelectbox > div, .stTextInput > div, .stButton button, .stDateInput > div, .stRadio > div {
     background: rgba(46, 32, 68, 0.8) !important;
     backdrop-filter: blur(8px);
@@ -67,7 +42,7 @@ input, textarea, .stSelectbox span, .stRadio span {
     transform: scale(1.02);
     box-shadow: 0 0 25px #9b4dff, 0 0 10px #c77dff !important;
 }
-/* 标题无边框，但有文字阴影 */
+/* 标题无边框 */
 h1, h2, h3 {
     text-shadow: 0 0 10px #9b4dff;
     border: none !important;
@@ -84,15 +59,15 @@ h1, h2, h3 {
 </style>
 """, unsafe_allow_html=True)
 
-# ========== 会话状态：控制主界面是否开始 ==========
+# ========== 会话状态 ==========
 if "started" not in st.session_state:
     st.session_state.started = False
 
-# ========== 主界面（未开始时显示） ==========
+# ========== 主界面 ==========
 if not st.session_state.started:
     st.title("🔮 今日运势")
     st.markdown("*让星辰与塔罗为你揭晓今日的秘密*")
-    # 神秘占卜师邀请语
+    # 占卜师邀请语
     st.markdown("""
     <div style="background: rgba(46,32,68,0.7); border-radius: 30px; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #b77dff; box-shadow: 0 0 15px #b77dff;">
         <h3>✨ 占卜师低语 ✨</h3>
@@ -103,36 +78,35 @@ if not st.session_state.started:
     if st.button("🔮 开始今日占卜 🔮", type="primary", use_container_width=True):
         st.session_state.started = True
         st.rerun()
-    st.stop()  # 停止后续渲染
+    st.stop()
 
-# ========== 正式测试界面（点击开始后显示） ==========
+# ========== 正式测试界面 ==========
 st.title("🔮 今日运势")
 st.markdown("*让星辰与塔罗为你揭晓今日的秘密*")
 
-# ========== 生日 → 星座 ==========
 def get_zodiac(birth_date):
     month_day = (birth_date.month, birth_date.day)
-    if (month_day >= (3, 21) and month_day <= (4, 19)):
+    if (3,21) <= month_day <= (4,19):
         return "白羊座"
-    elif (month_day >= (4, 20) and month_day <= (5, 20)):
+    elif (4,20) <= month_day <= (5,20):
         return "金牛座"
-    elif (month_day >= (5, 21) and month_day <= (6, 21)):
+    elif (5,21) <= month_day <= (6,21):
         return "双子座"
-    elif (month_day >= (6, 22) and month_day <= (7, 22)):
+    elif (6,22) <= month_day <= (7,22):
         return "巨蟹座"
-    elif (month_day >= (7, 23) and month_day <= (8, 22)):
+    elif (7,23) <= month_day <= (8,22):
         return "狮子座"
-    elif (month_day >= (8, 23) and month_day <= (9, 22)):
+    elif (8,23) <= month_day <= (9,22):
         return "处女座"
-    elif (month_day >= (9, 23) and month_day <= (10, 23)):
+    elif (9,23) <= month_day <= (10,23):
         return "天秤座"
-    elif (month_day >= (10, 24) and month_day <= (11, 22)):
+    elif (10,24) <= month_day <= (11,22):
         return "天蝎座"
-    elif (month_day >= (11, 23) and month_day <= (12, 21)):
+    elif (11,23) <= month_day <= (12,21):
         return "射手座"
-    elif (month_day >= (12, 22) or month_day <= (1, 19)):
+    elif month_day >= (12,22) or month_day <= (1,19):
         return "摩羯座"
-    elif (month_day >= (1, 20) and month_day <= (2, 18)):
+    elif (1,20) <= month_day <= (2,18):
         return "水瓶座"
     else:
         return "双鱼座"
@@ -145,7 +119,6 @@ st.info(f"✨ 你的星座是：**{zodiac}**")
 name = st.text_input("🌟 你的名字", placeholder="比如：小姜")
 gender = st.radio("🧑 你的性别", ("不透露", "女", "男"), index=0, horizontal=True)
 
-# API Key 获取
 try:
     api_key = st.secrets["DEEPSEEK_API_KEY"]
     key_ready = True
@@ -155,13 +128,7 @@ except:
 
 def get_fortune(zodiac, name, gender, api_key):
     user_name = name if name else "旅人"
-    if gender == "女":
-        honorific = "亲爱的朋友"
-    elif gender == "男":
-        honorific = "亲爱的朋友"
-    else:
-        honorific = "亲爱的朋友"
-    
+    honorific = "亲爱的朋友" if gender == "女" else "亲爱的朋友" if gender == "男" else "亲爱的朋友"
     prompt = f"""你是一位神秘且强大的命运塔罗牌占卜师，风格可爱幽默。请为{user_name}（{honorific}，{zodiac}）生成今日运势。
 
 要求：
@@ -204,7 +171,6 @@ if st.button("🔮 看看今日运势", type="primary"):
                 time.sleep(0.5)
             fortune = get_fortune(zodiac, name, gender, api_key)
             msg_placeholder.empty()
-        
         st.success("🌟 你的今日运势已送达 🌟")
         st.markdown(fortune)
         lucky = ["🌟 今天会有好事发生！", "🍀 保持微笑，运气不会差", "✨ 你比你想象的更棒", "🌙 记得许个愿哦", "🔮 你的直觉很准，相信它"]
