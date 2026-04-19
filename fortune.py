@@ -106,7 +106,7 @@ def get_fortune(zodiac, name, gender, api_key):
 5. 总字数300字左右
 6. 第一句话请提示大家一天仅可以测一回否则不准
 
-输出格式：
+严格遵循以下输出格式：
 🌼提示：...
 【💼事业】xxx
 【💖爱情】xxx
