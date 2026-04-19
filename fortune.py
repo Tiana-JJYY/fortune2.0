@@ -6,18 +6,15 @@ from datetime import date
 
 st.set_page_config(page_title="今日运势", page_icon="🔮", layout="centered")
 
-# ========== 安全版 CSS：去掉 ::before 闪烁，保留发光边框和高对比文字 ==========
+# ========== CSS样式（发光边框、高对比文字） ==========
 st.markdown("""
 <style>
-/* 深紫色背景（无复杂动画） */
 .stApp {
     background: linear-gradient(135deg, #1e1a2f 0%, #2a1e3c 50%, #3a2a4f 100%);
 }
-/* 全局文字颜色 */
 body, .stMarkdown, label, .stTextInput label, .stSelectbox label, .stRadio label, .stDateInput label {
     color: #f0e6ff !important;
 }
-/* 卡片、输入框、按钮等发光边框 */
 .css-1kyxreq, .stSelectbox > div, .stTextInput > div, .stButton button, .stDateInput > div, .stRadio > div {
     background: rgba(46, 32, 68, 0.8) !important;
     backdrop-filter: blur(8px);
@@ -26,11 +23,9 @@ body, .stMarkdown, label, .stTextInput label, .stSelectbox label, .stRadio label
     box-shadow: 0 0 8px #b77dff, inset 0 0 4px rgba(255,255,255,0.2) !important;
     color: #ffffff !important;
 }
-/* 输入框文字颜色 */
 input, textarea, .stSelectbox span, .stRadio span {
     color: #ffffff !important;
 }
-/* 按钮特殊发光 */
 .stButton button {
     background: linear-gradient(90deg, #9b4dff, #c77dff) !important;
     color: white !important;
@@ -42,14 +37,12 @@ input, textarea, .stSelectbox span, .stRadio span {
     transform: scale(1.02);
     box-shadow: 0 0 25px #9b4dff, 0 0 10px #c77dff !important;
 }
-/* 标题无边框 */
 h1, h2, h3 {
     text-shadow: 0 0 10px #9b4dff;
     border: none !important;
     box-shadow: none !important;
     color: #f0e6ff;
 }
-/* info框样式 */
 .stAlert {
     background: rgba(46, 32, 68, 0.9) !important;
     border: 1px solid #b77dff !important;
@@ -62,16 +55,17 @@ h1, h2, h3 {
 # ========== 会话状态 ==========
 if "started" not in st.session_state:
     st.session_state.started = False
+if "birthday_chosen" not in st.session_state:
+    st.session_state.birthday_chosen = False
 
 # ========== 主界面 ==========
 if not st.session_state.started:
     st.title("🔮 今日运势")
     st.markdown("*让星辰与塔罗为你揭晓今日的秘密*")
-    # 占卜师邀请语
     st.markdown("""
     <div style="background: rgba(46,32,68,0.7); border-radius: 30px; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #b77dff; box-shadow: 0 0 15px #b77dff;">
         <h3>✨ 占卜师低语 ✨</h3>
-        <p>“远方的旅人，你终于来了。今天的星辰为你排列成神秘的轨迹，让我为你揭示命运的碎片...</p>
+        <p>“远方的旅人，你终于来了。</p>
         <p>只需轻轻一点，命运的轮盘便会转动。” 🌙</p>
     </div>
     """, unsafe_allow_html=True)
@@ -111,14 +105,33 @@ def get_zodiac(birth_date):
     else:
         return "双鱼座"
 
+# 生日选择：使用 format 显示中文年月日（月份数字）
 default_birth = date(2000, 1, 1)
-birthday = st.date_input("🎂 选择你的生日", value=default_birth, min_value=date(1900,1,1), max_value=date.today())
-zodiac = get_zodiac(birthday)
-st.info(f"✨ 你的星座是：**{zodiac}**")
+birthday = st.date_input(
+    "🎂 选择你的生日",
+    value=default_birth,
+    min_value=date(1900,1,1),
+    max_value=date.today(),
+    format="YYYY年MM月DD日"   # 显示为 2000年01月01日 这种格式
+)
+
+# 检测用户是否真正修改了生日（排除默认初始值）
+if birthday != default_birth and not st.session_state.birthday_chosen:
+    st.session_state.birthday_chosen = True
+
+# 根据状态显示星座信息
+if st.session_state.birthday_chosen:
+    zodiac = get_zodiac(birthday)
+    st.info(f"✨ 你的星座是：**{zodiac}**")
+else:
+    st.info("✨ 请先选择你的生日，星座将自动显现 ✨")
+    # 此时尚未有星座，可设 zodiac 为 None，后续调用 get_fortune 前需要检查
+    zodiac = None
 
 name = st.text_input("🌟 你的名字", placeholder="比如：小姜")
 gender = st.radio("🧑 你的性别", ("不透露", "女", "男"), index=0, horizontal=True)
 
+# API Key 获取
 try:
     api_key = st.secrets["DEEPSEEK_API_KEY"]
     key_ready = True
@@ -133,7 +146,7 @@ def get_fortune(zodiac, name, gender, api_key):
 
 要求：
 1. 分四个维度：💼事业运势、💖爱情运势、💪健康运势、💰财运
-2. 每个维度一句话，积极正面或略带调侃，可以毒舌但绝不能人身攻击也不可以说别人倒霉
+2. 每个维度一句话，积极正面或略带调侃，可以毒舌但绝不能人身攻击也不可以说别人倒霉，略带些神秘色彩哦
 3. 最后给“今日幸运色”和“今日小贴士”
 4. 语气像好朋友聊天，不要太严肃
 5. 总字数150字以内
@@ -162,6 +175,8 @@ def get_fortune(zodiac, name, gender, api_key):
 if st.button("🔮 看看今日运势", type="primary"):
     if not key_ready:
         st.error("✨ 请先输入 DeepSeek API Key（本地测试）或检查云端配置 ✨")
+    elif not st.session_state.birthday_chosen:
+        st.error("✨ 请先选择你的生日 ✨")
     else:
         with st.spinner("🔮 占卜师正在连接星辰... 请稍候 🌙✨"):
             msgs = ["🌠 塔罗牌正在洗牌...", "⭐ 观测你的星盘...", "🔮 水晶球开始发亮...", "🃏 抽出一张命运之轮...", "💫 运势正在凝聚..."]
