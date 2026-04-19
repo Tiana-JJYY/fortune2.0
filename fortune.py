@@ -4,7 +4,7 @@ import random
 import time
 
 # ========== 页面配置 ==========
-st.set_page_config(page_title="AI今日运势", page_icon="🔮", layout="centered")
+st.set_page_config(page_title="今日运势", page_icon="🔮", layout="centered")
 
 # ========== 自定义 CSS 和 HTML 动画 ==========
 st.markdown("""
@@ -91,7 +91,7 @@ setInterval(createFallingEmoji, 500);
 
 # ========== 界面主体 ==========
 st.title("🔮今日运势")
-st.markdown("*让我来为你揭晓今日的秘密*")
+st.markdown("*请让我来为你揭晓今日的秘密*")
 
 zodiacs = ["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座",
            "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"]
