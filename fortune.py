@@ -111,7 +111,7 @@ def get_fortune(zodiac, name, gender, api_key):
 【💼事业】xxx
 【💖爱情】xxx
 【💪健康】xxx
-【💰财运】xxx
+【💴财运】xxx
 🌈幸运色：xxx
 📖小贴士：xxx
 """
