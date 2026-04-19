@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import random
 import time
-from datetime import date
 
 st.set_page_config(page_title="今日运势", page_icon="🔮", layout="centered")
 
@@ -12,10 +11,10 @@ st.markdown("""
 .stApp {
     background: linear-gradient(135deg, #1e1a2f 0%, #2a1e3c 50%, #3a2a4f 100%);
 }
-body, .stMarkdown, label, .stTextInput label, .stSelectbox label, .stRadio label, .stDateInput label {
+body, .stMarkdown, label, .stTextInput label, .stSelectbox label, .stRadio label {
     color: #f0e6ff !important;
 }
-.css-1kyxreq, .stSelectbox > div, .stTextInput > div, .stButton button, .stDateInput > div, .stRadio > div {
+.css-1kyxreq, .stSelectbox > div, .stTextInput > div, .stButton button, .stRadio > div {
     background: rgba(46, 32, 68, 0.8) !important;
     backdrop-filter: blur(8px);
     border-radius: 20px !important;
@@ -52,13 +51,11 @@ h1, h2, h3 {
 </style>
 """, unsafe_allow_html=True)
 
-# ========== 会话状态 ==========
+# ========== 会话状态：控制主界面 ==========
 if "started" not in st.session_state:
     st.session_state.started = False
-if "birthday_chosen" not in st.session_state:
-    st.session_state.birthday_chosen = False
 
-# ========== 主界面 ==========
+# ========== 主界面（未开始时显示） ==========
 if not st.session_state.started:
     st.title("🔮 今日运势")
     st.markdown("*让星辰与塔罗为你揭晓今日的秘密*")
@@ -78,55 +75,10 @@ if not st.session_state.started:
 st.title("🔮 今日运势")
 st.markdown("*让星辰与塔罗为你揭晓今日的秘密*")
 
-def get_zodiac(birth_date):
-    month_day = (birth_date.month, birth_date.day)
-    if (3,21) <= month_day <= (4,19):
-        return "白羊座"
-    elif (4,20) <= month_day <= (5,20):
-        return "金牛座"
-    elif (5,21) <= month_day <= (6,21):
-        return "双子座"
-    elif (6,22) <= month_day <= (7,22):
-        return "巨蟹座"
-    elif (7,23) <= month_day <= (8,22):
-        return "狮子座"
-    elif (8,23) <= month_day <= (9,22):
-        return "处女座"
-    elif (9,23) <= month_day <= (10,23):
-        return "天秤座"
-    elif (10,24) <= month_day <= (11,22):
-        return "天蝎座"
-    elif (11,23) <= month_day <= (12,21):
-        return "射手座"
-    elif month_day >= (12,22) or month_day <= (1,19):
-        return "摩羯座"
-    elif (1,20) <= month_day <= (2,18):
-        return "水瓶座"
-    else:
-        return "双鱼座"
-
-# 生日选择：使用 format 显示中文年月日（月份数字）
-default_birth = date(2000, 1, 1)
-birthday = st.date_input(
-    "🎂 选择你的生日",
-    value=default_birth,
-    min_value=date(1900,1,1),
-    max_value=date.today(),
-    format="YYYY年MM月DD日"   # 显示为 2000年01月01日 这种格式
-)
-
-# 检测用户是否真正修改了生日（排除默认初始值）
-if birthday != default_birth and not st.session_state.birthday_chosen:
-    st.session_state.birthday_chosen = True
-
-# 根据状态显示星座信息
-if st.session_state.birthday_chosen:
-    zodiac = get_zodiac(birthday)
-    st.info(f"✨ 你的星座是：**{zodiac}**")
-else:
-    st.info("✨ 请先选择你的生日，星座将自动显现 ✨")
-    # 此时尚未有星座，可设 zodiac 为 None，后续调用 get_fortune 前需要检查
-    zodiac = None
+# 星座下拉框
+zodiacs = ["白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座",
+           "天秤座", "天蝎座", "射手座", "摩羯座", "水瓶座", "双鱼座"]
+zodiac = st.selectbox("✨ 选择你的星座", zodiacs)
 
 name = st.text_input("🌟 你的名字", placeholder="比如：小姜")
 gender = st.radio("🧑 你的性别", ("不透露", "女", "男"), index=0, horizontal=True)
@@ -141,12 +93,14 @@ except:
 
 def get_fortune(zodiac, name, gender, api_key):
     user_name = name if name else "旅人"
-    honorific = "亲爱的朋友" if gender == "女" else "亲爱的朋友" if gender == "男" else "亲爱的朋友"
+    # 无论男女统一称呼“亲爱的朋友”
+    honorific = "亲爱的朋友"
+    
     prompt = f"""你是一位神秘且强大的命运塔罗牌占卜师，风格可爱幽默。请为{user_name}（{honorific}，{zodiac}）生成今日运势。
 
 要求：
 1. 分四个维度：💼事业运势、💖爱情运势、💪健康运势、💰财运
-2. 每个维度一句话，积极正面或略带调侃，可以毒舌但绝不能人身攻击也不可以说别人倒霉，略带些神秘色彩哦
+2. 每个维度一句话，积极正面或略带调侃，可以毒舌但绝不能人身攻击也不可以说别人倒霉
 3. 最后给“今日幸运色”和“今日小贴士”
 4. 语气像好朋友聊天，不要太严肃
 5. 总字数150字以内
@@ -175,8 +129,6 @@ def get_fortune(zodiac, name, gender, api_key):
 if st.button("🔮 看看今日运势", type="primary"):
     if not key_ready:
         st.error("✨ 请先输入 DeepSeek API Key（本地测试）或检查云端配置 ✨")
-    elif not st.session_state.birthday_chosen:
-        st.error("✨ 请先选择你的生日 ✨")
     else:
         with st.spinner("🔮 占卜师正在连接星辰... 请稍候 🌙✨"):
             msgs = ["🌠 塔罗牌正在洗牌...", "⭐ 观测你的星盘...", "🔮 水晶球开始发亮...", "🃏 抽出一张命运之轮...", "💫 运势正在凝聚..."]
@@ -186,6 +138,7 @@ if st.button("🔮 看看今日运势", type="primary"):
                 time.sleep(0.5)
             fortune = get_fortune(zodiac, name, gender, api_key)
             msg_placeholder.empty()
+        
         st.success("🌟 你的今日运势已送达 🌟")
         st.markdown(fortune)
         lucky = ["🌟 今天会有好事发生！", "🍀 保持微笑，运气不会差", "✨ 你比你想象的更棒", "🌙 记得许个愿哦", "🔮 你的直觉很准，相信它"]
